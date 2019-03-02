@@ -1,0 +1,285 @@
+﻿
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+    <title>Chess Template</title>
+    <link rel="stylesheet" href="css/chessboard.css" />
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+    <audio id="moveSound">
+        <source src="sounds/move.mp3"></source>
+    </audio>
+    <audio id="yahooSound">
+        <source src="sounds/yahoo.mp3"></source>
+    </audio>
+</head>
+<style type="text/css">
+    body, html {
+        height: 100%;
+        background-image: url('img/bg-01.jpg');
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: cover;
+    }
+</style>
+<body>
+    <script src="js/chess.js"></script>
+    <div><button id="signOut" class="w3-button w3-black w3-round-xlarge" style="position: absolute; top: 20px; left: 20px; font-size: 20px; margin: 25px 50px 75px 100px;">sign out</button></div>
+    <div><b><a id="player1Name" style="position: absolute; top: 20px; left: 20px; font-size: 20px; margin: 70px 50px 75px 100px;"></a></b></div>
+    <div><b><a id="player2Name" style="position: absolute; top: 20px; left: 20px; font-size: 20px; margin: 100px 50px 75px 100px;"></a></b></div>
+    <div id="board" style="margin-top: 70px;"></div>
+    <b><div id="result" style="color: black;"></div></b>
+    <script src="js/json3.min.js"></script>
+    <script src="js/jquery-1.10.1.min.js"></script>
+    <script src="js/chessboard.js"></script>
+
+
+        <script src="https://www.gstatic.com/firebasejs/5.7.0/firebase.js"></script>
+        <script>
+          // Initialize Firebase
+          var config = {
+            apiKey: "AIzaSyBpRzKhwsJvaYzSTkq2NWICoGlzIRrAD3A",
+            authDomain: "hw3web-14bb7.firebaseapp.com",
+            databaseURL: "https://hw3web-14bb7.firebaseio.com",
+            projectId: "hw3web-14bb7",
+            storageBucket: "hw3web-14bb7.appspot.com",
+            messagingSenderId: "23160166250"
+          };
+          firebase.initializeApp(config);
+
+        $(document).ready(function () {
+            $(document).on("click", "#signOut", function () {
+                logOut();
+            });
+        });
+
+        let tID;
+        var timesUp=false;
+        function startTimer() {
+         var timer = 60;
+         timesUp=false;
+         
+         tID= setInterval(function () {
+        if (--timer < 0) {
+           timesUp=true;
+           init();
+        }
+    }, 1000);
+    }
+
+        function logOut(){
+            $("#result").hide();
+            var game = firebase.database().ref().child('game');
+            var player1 = game.child('player1');
+            var player2 = game.child('player2');
+            var move = game.child('move');
+            var oponnentExit = game.child('oponnentExit');
+            game.once('value').then(function (snapshot) {
+                var gameValue = snapshot.val();
+                if (gameValue.player1 == localStorage.currentUser) {
+                    player1.set("undefined");
+                } else if (gameValue.player2 == localStorage.currentUser) {
+                    player2.set("undefined");
+                }
+                move.set("move");
+                if(gameValue.player1 !== "undefined" && gameValue.player2 !== "undefined" && localStorage.user_color !== "None"){
+                    oponnentExit.set(true);
+                }
+                else
+                    oponnentExit.set(false);
+                firebase.auth().signOut().then(function () {
+                    location.href = "login.html";
+                });
+                // Sign-out successful.
+            }).catch(function (error) {
+                // An error happened.
+            });
+        }
+
+        var position = 'start';
+        var starCountRef = firebase.database().ref('game');
+        move = starCountRef.child('move');
+        move.on('value', function (snapshot) {
+            if(snapshot.val() !== "move"){
+                position = snapshot.val();
+                init();
+                clearInterval(tID);
+                startTimer();
+            }
+        });
+
+        oponnentExit = starCountRef.child('oponnentExit');
+        oponnentExit.on('value', function(snapshot){
+            if(snapshot.val() === true){
+                if(localStorage.user_color === "None"){
+                    if(localStorage.currentColor === "White")
+                        $("#result").html("Black won the game, White left the game.");
+                    else
+                        $("#result").html("White won the game, Black left the game.");
+                }
+                else{
+                    $("#result").html("You won the game, Oponnent left the game.");
+                }
+                
+                setTimeout(logOut, 5000);
+            }            
+            oponnentExit.set(false);
+        });
+
+        var p1Name;
+        var p2Name;
+        starCountRef.on('value', function(snapshot){
+            sn = snapshot.val();
+            p1Name = sn.player1;
+            p2Name = sn.player2;
+        });
+
+        var init = function () {
+            var board,
+                game = new Chess(position === 'start' ? undefined : position);
+            // do not pick up pieces if the game is over
+            // only pick up pieces for the side to move
+            var onDragStart = function (source, piece, position, orientation) {
+                if (game.game_over() === true ||
+                    (localStorage.user_color === "Black" && piece.search(/^w/) !== -1) ||
+                    (localStorage.user_color === "White" && piece.search(/^b/) !== -1) ||
+                     (localStorage.user_color === "None") ||
+                     (p1Name === 'undefined') || (p2Name === 'undefined') || (timesUp === true)) {
+                    return false;
+                }
+            };
+
+            var onDrop = function (source, target) {
+                // see if the move is legal
+                var move = game.move({
+                    from: source,
+                    to: target,
+                    promotion: 'q' // NOTE: always promote to a queen for example simplicity
+                });
+
+                // illegal move
+                if (move === null) return 'snapback';
+
+                updateStatus();
+
+                var move = firebase.database().ref().child('game').child('move');
+                console.log(game.fen());
+                move.set(game.fen());
+                $("#moveSound")[0].play();
+            };
+
+            // update the board position after the piece snap
+            // for castling, en passant, pawn promotion
+            var onSnapEnd = function () {
+                board.position(game.fen());
+            };
+
+            var updateStatus = function () {
+                var status = '';
+
+                var moveColor = 'White';
+                if (game.turn() === 'b') {
+                    moveColor = 'Black';
+                }
+                localStorage['currentColor'] = moveColor;
+
+                // checkmate?
+                if (game.in_checkmate() === true) {
+                    $("#yahooSound")[0].play();
+                    if(localStorage.user_color === "None"){
+                        if(moveColor === "White")
+                            status = 'Game over, Black won the game.';
+                        else
+                            status = 'Game over, White won the game.';
+                    }
+                    else if(localStorage.user_color !== moveColor)
+                        status = 'Game over, You won the game.';
+                    else 
+                        status = 'Game over, Oponnent won the game.';
+                    setTimeout(logOut, 10000);
+                }
+                else if(timesUp === true){
+                    if(localStorage.user_color === "None"){
+                        if(moveColor === "White")
+                            status = 'Game over, White`s time is out Black won.';
+                        else
+                            status = 'Game over, Black`s time is out White won.';
+                    }
+                    else if(localStorage.user_color !== moveColor)
+                        status = 'Game over, Oponnent`s time is out You won.';
+                    else 
+                        status = 'Game over, Your time is out Oponnent won.';
+                    setTimeout(logOut, 10000);
+                }   
+                // draw?
+                else if (game.in_draw() === true) {
+                    $("#yahooSound")[0].play();
+                    status = 'Game over, drawn position';
+                    setTimeout(logOut, 10000);
+                }
+
+                // game still on
+                else {
+                    if(localStorage.user_color === "None"){
+                        if(moveColor === "White")
+                            status = 'White turn to move';
+                        else
+                            status = 'Black turn to move';
+                    }
+                    else if(localStorage.user_color === moveColor)
+                        status = 'Your turn to move';
+                    else
+                        status = 'Oponnent turn to move';
+
+                    // check?
+                    if (game.in_check() === true) {
+                        if(localStorage.user_color === "None"){
+                            if(moveColor === "White")
+                                status += ', White is in check';
+                            else
+                                status += ', Black is in check';
+                        }
+                        else if(localStorage.user_color === moveColor)
+                            status += ', You are in check';
+                        else
+                            status += ', Oponnent is in check';
+                    }
+                }
+
+                myGame = firebase.database().ref('game');
+                myGame.on('value', function (snapshot) {
+                    var gameValue = snapshot.val();
+                    if(gameValue.player1 !== "undefined")
+                        $("#player1Name").text("player1: " + gameValue.player1);
+                    else
+                        $("#player1Name").text("player1: Not Connected!");
+                    if(gameValue.player2 !== "undefined")
+                        $("#player2Name").text("player2: " + gameValue.player2);
+                    else
+                        $("#player2Name").text("player2: Not Connected!");
+                });
+
+                $("#result").html(status);
+                console.log(game.fen());
+                console.log(game.pgn());
+            };
+
+            var cfg = {
+                draggable: true,
+                position: position,
+                onDragStart: onDragStart,
+                onDrop: onDrop,
+                onSnapEnd: onSnapEnd
+            };
+            board = ChessBoard('board', cfg);
+            
+
+            updateStatus();
+        }; // end init()
+        $(document).ready(init);
+
+    </script>
+</body>
+</html>
