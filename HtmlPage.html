@@ -1,0 +1,155 @@
+﻿
+<html lang="en-US">
+<head>
+    <link rel="stylesheet"
+          href="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"></script>
+    <script src="https://ajax.aspnetcdn.com/ajax/jQuery/jquery-3.3.1.min.js"></script>
+    <script src="crossword.js"></script>
+    <script src="genCrossword.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@8.2.6/dist/sweetalert2.all.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="crossword.css">
+    <script>
+        function readFile() {
+            $.ajax({
+                url: 'https://alonze11.000webhostapp.com/readFile.php',
+                type: 'GET',
+                data: {}, //Pass your varibale in data
+                success: function (getreturn) {
+                    var obj = JSON.parse(getreturn);
+                    console.log(obj);
+                   
+                    
+                }
+            });
+        }
+    </script>
+</head>
+<body>
+    <div id="allScreen" class="h-100 w-100">
+        <div id="screen" class="h-100 w-50"><button id="b-quit" type="button">Quit</button></div>
+        <div id="instruction" class="h-100 w-50">
+            <div id="table_hori" class="row h-50">
+
+            </div><br />
+            <div id="table_verti" class="row h-50">
+
+            </div>
+        </div>
+    </div>
+    <script src="https://www.gstatic.com/firebasejs/5.8.4/firebase.js"></script>
+    <script>
+        readFile("English_words.txt");
+        firebase.initializeApp(config);
+        if (localStorage.N == 5) {
+            _n = 5;
+            _m = 5;
+        }
+
+        if (localStorage.N == 10) {
+            _n = 10;
+            _m = 10;
+        }
+
+        if (localStorage.N == 15) {
+            _n = 15;
+            _m = 15;
+        }
+        if (localStorage.N == 20) {
+            _n = 20;
+            _m = 20;
+        }
+
+        for (var i = 0; i < _n; i++) {
+            this._board[i] = new Array(_m);
+            this._hWords[i] = new Array(_m);
+            this._vWords[i] = new Array(_m);
+            for (var j = 0; j < _m; j++) {
+                _board[i][j] = ' ';
+            }
+        }
+
+        
+
+
+        var hebrewWordsTxt = FileHelper("Hebrew_words.txt");
+        var hebrewWords = hebrewWordsTxt.split(/\n/);
+        var englishWordsTxt = FileHelper("English_words.txt");
+        var englishWords = englishWordsTxt.split(/\n/);
+        console.log(englishWords)
+        var map = {};
+        for (var i = 0; i < englishWords.length; i++) {
+            map[englishWords[i]] = hebrewWords[i];
+        }
+        console.log(map[englishWords[0]])
+        console.log(englishWords[0])
+
+        num = 0;
+        var isExist = []
+        if (_n == 5) {
+            while (num < 1300) {
+                var rand = Math.floor(Math.random() * 2600);
+                if ($.inArray(rand, isExist) == -1) {
+                    AddWord(englishWords[rand]);
+                    isExist.push(rand);
+                }
+                num++;
+            }
+        } else {
+            while (num < 2600) {
+                AddWord(englishWords[num++])
+            }
+        }
+
+        var isHorizontalWord;
+
+        var content = '<table id="matrix" class="w-100">'
+        mat = _board;
+        console.log(mat);
+        for (var i = 0; i < _n; i++) {
+            content += '<tr>';
+            for (var j = 0; j < _m; j++) {
+                if (mat[i][j] === '*' || mat[i][j] === ' ') {
+                    content += '<td id="black ' + i + "," + j + '" class="squere-define"><div class="squere"></div></td>'
+                } else {
+                    content += '<td id="white ' + i + "," + j + '"><div class="squere"><p></p><input type="text" maxlength=1></div></td>'
+                }
+            }
+            content += '</tr>'
+        }
+        $('#screen').append(content);
+
+
+
+        var wordInBoard = [];
+        var HorizontalArray = [];
+        var HorizontalCount = 1;
+        var VerticalArray = [];
+        var VerticalCount = 1;
+        var globalCount = 1;
+        $("#table_hori").append('<div id="col-1-hori" class="col-md-4"></div>');
+        $("#table_hori").append('<div id="col-2-hori" class="col-md-4"></div>');
+        $("#table_hori").append('<div class="col-md-4"><h2>' + "מאוזן" + '</h2></div>');
+        $("#table_verti").append('<div id="col-1-verti" class="col-md-4"></div>');
+        $("#table_verti").append('<div id="col-2-verti" class="col-md-4"></div>');
+        $("#table_verti").append('<div class="col-md-4"><h2>' + "מאונך" + '</h2></div>');
+        changeCss();
+        for (var i = 0; i < _n; i++) {
+            for (var j = 0; j < _m; j++) {
+                var horizontal_word = getHorizontalWord(i, j);
+                if (horizontal_word.length >= 2 && isStart(i, j, true)) {
+                    fillBoard(i, j, horizontal_word, true);
+                }
+                var vertical_word = getVerticalWord(i, j);
+                if (vertical_word.length >= 2 && isStart(i, j, false)) {
+                    fillBoard(i, j, vertical_word, false);
+                }
+            }
+        }
+    </script>
+</body>
+</html>
+    

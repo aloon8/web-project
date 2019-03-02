@@ -1,0 +1,130 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+	<title>Login</title>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+<!--===============================================================================================-->	
+	<link rel="stylesheet" type="text/css" href="css/util.css">
+	<link rel="stylesheet" type="text/css" href="css/main.css">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+<!--===============================================================================================-->
+</head>
+<body>
+    <div class="container-login100" style="background-image: url('img/bg-01.jpg');">
+        <div class="wrap-login100 p-l-55 p-r-55 p-t-80 p-b-30">
+        	<h1 class="txt3">Crossword</h1>
+            <form class="login100-form validate-form">
+                <span class="login100-form-title p-b-37">Log In</span>
+
+                <div class="wrap-input100 validate-input m-b-20" data-validate="Enter username or email">
+                    <input class="input100" type="text" name="email" id="email" placeholder="username or email">
+                    <span class="focus-input100"></span>
+                </div>
+
+                <div class="wrap-input100 validate-input m-b-25" data-validate="Enter password">
+                    <input class="input100" type="password" name="pass" id="pass" placeholder="password">
+                    <span class="focus-input100"></span>
+                </div>
+
+                <div class="container-login100-form-btn">
+                    <button class="login100-form-btn" id="login">
+                        LogIn
+                    </button>
+                </div>
+
+                <div class="text-center">
+                    <a href="#" class="txt2 hov1" id="signup">
+                        Sign Up
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div id="dropDownSelect1"></div>
+
+    
+<script src="https://www.gstatic.com/firebasejs/5.8.4/firebase.js"></script>
+<script>
+  // Initialize Firebase
+  var config = {
+    apiKey: "AIzaSyB8_oI17qamX3hLJUDZxRWHTtfCrrYsqi0",
+    authDomain: "crossword-1dcc8.firebaseapp.com",
+    databaseURL: "https://crossword-1dcc8.firebaseio.com",
+    projectId: "crossword-1dcc8",
+    storageBucket: "crossword-1dcc8.appspot.com",
+    messagingSenderId: "169469512359"
+  };
+  firebase.initializeApp(config);
+</script>
+
+    <script>
+        $(document).ready(function () {
+            var state = "login";
+
+            $("#signup").click(function () {
+                $(this).text(state);
+                if (state === "login") {
+                    state = "signup";
+                } else {
+                    state = "login";
+                }
+                $("#login").text(state);
+            });
+
+            $("form").submit(function (e) {
+                e.preventDefault(); // so it wouldn't use form functionality
+                var email = $("#email").val();
+                let pass = $("#pass").val();
+                var name = function(){
+                	var myname = "";
+            		for(let i=0; 1; i++){
+            			if(email[i] == '@')
+            				break;
+            			myname += email[i];
+            			console.log(myname);
+            		}
+            		return myname;
+            	};
+                console.log(email, pass);
+                localStorage['name'] = name();
+                if (state === "login") {
+                    firebase.auth().signInWithEmailAndPassword(email, pass).catch(function (error) {
+                        // Handle Errors here.
+                        var errorCode = error.code;
+                        var errorMessage = error.message;
+                        alert(errorMessage);
+                    });
+                } else {
+                    firebase.auth().createUserWithEmailAndPassword(email, pass).catch(function (error) {
+                        // Handle Errors here.
+                        var errorCode = error.code;
+                        var errorMessage = error.message;
+                        alert(errorMessage);
+                    });
+                }
+            });
+
+        firebase.auth().onAuthStateChanged(function (user) {
+            if (user) {
+            	console.log(user.uid);
+            	var points = firebase.database().ref('game' + user.uid + '/points');
+            	localStorage['uid'] = user.uid;
+                points.once('value').then(function (snapshot) {
+                    var playerPoints = snapshot.val();
+                    if (playerPoints === null) {
+                        points.set(0);
+                    }
+                    location.href = "Main.html";
+                });
+                //still connected
+            } else {
+            }
+        });
+        });
+    </script>
+</body>
+</html>

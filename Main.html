@@ -1,0 +1,153 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+	<title>Main</title>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+<!--===============================================================================================-->	
+	<link rel="stylesheet" type="text/css" href="css/util.css">
+	<link rel="stylesheet" type="text/css" href="css/main.css">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+<!--===============================================================================================-->
+<style type="text/css">
+    <style>
+    img{
+    }
+
+    img:hover {
+      -ms-transform: scale(1.2); /* IE 9 */
+      -webkit-transform: scale(1.2); /* Safari 3-8 */
+      transform: scale(1.2); 
+        cursor: pointer;
+    }
+.myButton {
+    -moz-box-shadow:inset 0px 1px 3px 0px #818584;
+    -webkit-box-shadow:inset 0px 1px 3px 0px #818584;
+    box-shadow:inset 0px 1px 3px 0px #818584;
+    background:-webkit-gradient(linear, left top, left bottom, color-stop(0.05, #535c59), color-stop(1, #131414));
+    background:-moz-linear-gradient(top, #535c59 5%, #131414 100%);
+    background:-webkit-linear-gradient(top, #535c59 5%, #131414 100%);
+    background:-o-linear-gradient(top, #535c59 5%, #131414 100%);
+    background:-ms-linear-gradient(top, #535c59 5%, #131414 100%);
+    background:linear-gradient(to bottom, #535c59 5%, #131414 100%);
+    filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#535c59', endColorstr='#131414',GradientType=0);
+    background-color:#535c59;
+    -moz-border-radius:5px;
+    -webkit-border-radius:5px;
+    border-radius:5px;
+    border:1px solid #566963;
+    display:inline-block;
+    cursor:pointer;
+    color:#ffffff;
+    font-family:Arial;
+    font-size:14px;
+    font-weight:bold;
+    padding:11px 23px;
+    text-decoration:none;
+    text-shadow:0px -1px 0px #6c706f;
+    margin: 40px 10px 10px 100px;
+}
+.myButton:hover {
+    background:-webkit-gradient(linear, left top, left bottom, color-stop(0.05, #131414), color-stop(1, #535c59));
+    background:-moz-linear-gradient(top, #131414 5%, #535c59 100%);
+    background:-webkit-linear-gradient(top, #131414 5%, #535c59 100%);
+    background:-o-linear-gradient(top, #131414 5%, #535c59 100%);
+    background:-ms-linear-gradient(top, #131414 5%, #535c59 100%);
+    background:linear-gradient(to bottom, #131414 5%, #535c59 100%);
+    filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#131414', endColorstr='#535c59',GradientType=0);
+    background-color:#131414;
+}
+.myButton:active {
+    position:relative;
+    top:1px;
+}
+</style>
+</head>
+    <script src="https://www.gstatic.com/firebasejs/5.8.4/firebase.js"></script>
+    <script>
+      // Initialize Firebase
+      var config = {
+        apiKey: "AIzaSyB8_oI17qamX3hLJUDZxRWHTtfCrrYsqi0",
+        authDomain: "crossword-1dcc8.firebaseapp.com",
+        databaseURL: "https://crossword-1dcc8.firebaseio.com",
+        projectId: "crossword-1dcc8",
+        storageBucket: "crossword-1dcc8.appspot.com",
+        messagingSenderId: "169469512359"
+      };
+      firebase.initializeApp(config);
+
+      $(document).ready(function () {
+            $('#welcome').append(" " + localStorage['name']);
+            $(document).on("click", "#signOut", function () {
+                logOut();
+            });
+            $("#img5").click(function () {
+                localStorage['N'] = 5;
+                location.href = "HtmlPage.html";
+            });
+            $("#img10").click(function () {
+                localStorage['N'] = 10;
+                location.href = "HtmlPage.html";
+            });
+            $("#img15").click(function () {
+                localStorage['N'] = 15;
+                location.href = "HtmlPage.html";
+            });
+            $("#img20").click(function () {
+                localStorage['N'] = 20;
+                location.href = "HtmlPage.html";
+            });
+        });
+
+        function logOut(){
+                firebase.auth().signOut().then(function () {
+                    location.href = "login.html";
+                });
+        }
+
+        points = firebase.database().ref('game' + localStorage['uid']+'/points');
+        points.once('value').then(function (snapshot) {
+                $('#points-input').val(snapshot.val());
+        });
+    </script>
+<body>
+    <div style="background-image: url('img/background.jpg'); height: 100%;">
+<div class="container-fluid">
+  <div class="row h-50">
+    <div class="col-sm-3"><h1 class="txt5" style="margin: 40px 10px 0 50px;">Your Points:</h1></div>
+    <div class="col-sm-6"><h1 class="txt6" id="welcome">Welcome</h1></div>
+    <div class="col-sm-3"><a id="signOut" href="#" class="myButton">Sign Out</a></div>
+  </div>
+  <div class="row h-50">
+    <div class="col-sm-1" style=" background-color: white; border: solid; border-radius: 10px; margin: 0 0 10px 65px;"><input class="input10" id="points-input" type="text" readonly="readonly"><span class="focus-input100"></span></div>
+    <div class="col-sm-1"></div>
+    <div class="col-sm-7"><h1 class="txt4" style="text-align: center;">Choose Difficulty</h1></div>
+    <div class="col-sm-3"></div>
+  </div>
+  <div class="row h-50">
+    <div class="col-sm-6"><img id="img5" src='img/crossword.png' width="150px" height="150px" style="margin: 20px 100px 10px 400px;">
+        <h1 class="txt5" style="margin: 15px 10px 10px 458px;">
+            5x5
+        </h1></div>
+    <div class="col-sm-6"><img id="img10" src='img/crossword.png' width="150px" height="150px" style="margin: 20px 350px 10px 100px;">
+    <h1 class="txt5" style="margin: 15px 10px 10px 150px;">
+            10x10
+        </h1></div>
+  </div>
+    <div class="row h-50">
+    <div class="col-sm-6"><img id="img15" src='img/crossword.png' width="150px" height="150px" style="margin: 20px 100px 10px 400px;">
+    <h1 class="txt5" style="margin: 15px 10px 10px 450px;">
+            15x15
+        </h1></div>
+    <div class="col-sm-6"><img id="img20" src='img/crossword.png' width="150px" height="150px" style="margin: 20px 350px 10px 100px;">
+    <h1 class="txt5" style="margin: 15px 10px 10px 150px;">
+            20x20
+        </h1></div>
+  </div>
+</div>
+</div>
+</body>
+</html>
